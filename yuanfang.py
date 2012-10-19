@@ -5,6 +5,7 @@ import json
 import re
 import time
 import variable
+from consts import roll
 
 APIKEY = '00299dcb49a1e0bf007cd961dce5a23d'
 SECRET = '84f8ea75fb69f3c4'
@@ -28,7 +29,8 @@ def make_author_requeset(url):
 
 def yuan_fang_say(status_id, uid):
     req = make_author_requeset('https://api.douban.com/shuo/v2/statuses/%s/comments' % status_id)
-    if urllib2.urlopen(url=req, data=urllib.urlencode({'text': '@%s %s' % (str(uid), '大人真乃神人也')})):
+    reply = roll()
+    if urllib2.urlopen(url=req, data=urllib.urlencode({'text': '@%s %s' % (str(uid), str(reply))})):
         print('Success say to %s' % uid)
 
 
@@ -42,7 +44,7 @@ def check_status(status_id):
             yuan_fang_say(status_id, status['user']['uid'])
 
 def check_reply(status_id):
-    req = make_author_requeset('https://api.douban.com/shuo/v2/statuses/%s/comments' % status_id)
+    req = make_author_requeset('https://api.douban.com/shuo/v2/statuses/%s/comments?count=200' % status_id)
     json_reply = json.loads(urllib2.urlopen(req).read())
     for reply in json_reply:
         reply_time = datetime.strptime(reply['created_at'], TIMEFORMAT)
