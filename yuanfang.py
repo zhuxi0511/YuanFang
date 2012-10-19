@@ -32,13 +32,14 @@ def yuan_fang_say(status_id, uid):
         print('Success say to %s' % uid)
 
 
-def check_status(status_id, status_title, status_time):
-    if re.search('@zhuxi0511', status_title) is not None and status_time > variable.check_time:
+def check_status(status_id):
+    req = make_author_requeset('https://api.douban.com/shuo/v2/statuses/%s' % status_id)
+    status = json.loads(urllib2.urlopen(req).read())
+    status_time = datetime.strptime(status['created_at'], TIMEFORMAT)
+    if re.search('@zhuxi0511', status['text']) is not None and status_time > variable.check_time:
         variable.tmp_time = status_time
-        req = make_author_requeset('https://api.douban.com/shuo/v2/statuses/%s' % status_id)
-        json_status = json.loads(urllib2.urlopen(req).read())
-        if json_status['user']['uid']:
-            yuan_fang_say(status_id, json_status['user']['uid'])
+        if status['user']['uid']:
+            yuan_fang_say(status_id, status['user']['uid'])
 
 def check_reply(status_id):
     req = make_author_requeset('https://api.douban.com/shuo/v2/statuses/%s/comments' % status_id)
@@ -51,8 +52,8 @@ def check_reply(status_id):
                 yuan_fang_say(status_id, reply['user']['uid'])
 
 def check_notifications(comment_ids):
-    for status_id, status_title, status_time in comment_ids:
-        check_status(status_id, status_title, status_time)
+    for status_id in comment_ids:
+        check_status(status_id)
         check_reply(status_id)
 
 while True:
@@ -61,8 +62,8 @@ while True:
     notifications = f.read()
     json_notification = json.loads(notifications)
     #print json_notification
-        
-    hits = [(i['target_id'], i['target_title'], datetime.strptime(i['time'], TIMEFORMAT)) \
+
+    hits = [i['target_id'] \
             for i in json_notification['notifications'] if i['cate'] == 'notification']
 
     check_notifications(hits)
