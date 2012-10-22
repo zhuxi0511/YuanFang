@@ -70,7 +70,7 @@ def make_author_request(url):
 
 def yuan_fang_say(status_id, uid, message):
     req = make_author_request('https://api.douban.com/shuo/v2/statuses/%s/comments' % status_id)
-    reply = roll(message)
+    reply = roll()
     try:
         if urllib2.urlopen(url=req, data=urllib.urlencode({'text': '@%s %s' % (str(uid), str(reply))})):
             print('Success say to %s' % uid)
