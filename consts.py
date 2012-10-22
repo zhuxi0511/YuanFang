@@ -12,7 +12,7 @@ YUANFANGREPLY = [
     ('大人，属下与此事无关', 1000),
 ]
 
-def roll():
+def roll(input):
     up = len(YUANFANGREPLY)
     while True:
         x = random.randint(0, up - 1)
