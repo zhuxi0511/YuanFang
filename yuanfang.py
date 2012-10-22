@@ -62,38 +62,47 @@ TIMEFORMAT = '%Y-%m-%d %H:%M:%S'
 #               data = urllib.urlencode(data)
 #               )
 
-def make_author_requeset(url):
+def make_author_request(url):
     print url
     author_req = urllib2.Request('{0}?apikey={1}'.format(url, API_KEY))
     author_req.add_header('Authorization', 'Bearer ' + ACCESS_TOKEN)
     return author_req
 
 def yuan_fang_say(status_id, uid, message):
-    req = make_author_requeset('https://api.douban.com/shuo/v2/statuses/%s/comments' % status_id)
+    req = make_author_request('https://api.douban.com/shuo/v2/statuses/%s/comments' % status_id)
     reply = roll(message)
-    if urllib2.urlopen(url=req, data=urllib.urlencode({'text': '@%s %s' % (str(uid), str(reply))})):
-        print('Success say to %s' % uid)
-        time.sleep(3)
+    try:
+        if urllib2.urlopen(url=req, data=urllib.urlencode({'text': '@%s %s' % (str(uid), str(reply))})):
+            print('Success say to %s' % uid)
+    except:
+        print('failed say to %s' % uid)
+    time.sleep(3)
 
 
 def check_status(status_id):
-    req = make_author_requeset('https://api.douban.com/shuo/v2/statuses/%s' % status_id)
-    status = json.loads(urllib2.urlopen(req).read())
-    status_time = datetime.strptime(status['created_at'], TIMEFORMAT)
-    if re.search('@yuanfanglee', status['text']) is not None and status_time > variable.check_time:
-        variable.tmp_time = status_time
-        if status['user']['uid']:
-            yuan_fang_say(status_id, status['user']['uid'], status['text'])
+    req = make_author_request('https://api.douban.com/shuo/v2/statuses/%s' % status_id)
+    try:
+        status = json.loads(urllib2.urlopen(req).read())
+        status_time = datetime.strptime(status['created_at'], TIMEFORMAT)
+        if re.search('@yuanfanglee', status['text']) is not None and status_time > variable.check_time:
+            variable.tmp_time = status_time
+            if status['user']['uid']:
+                yuan_fang_say(status_id, status['user']['uid'], status['text'])
+    except:
+        print 'check status failed'
 
 def check_reply(status_id):
-    req = make_author_requeset('https://api.douban.com/shuo/v2/statuses/%s/comments?count=200' % status_id)
-    json_reply = json.loads(urllib2.urlopen(req).read())
-    for reply in json_reply:
-        reply_time = datetime.strptime(reply['created_at'], TIMEFORMAT)
-        if re.search('@yuanfanglee', reply['text']) is not None and reply_time > variable.check_time:
-            variable.tmp_time = reply_time
-            if reply['user']['uid']:
-                yuan_fang_say(status_id, reply['user']['uid'], reply['text'])
+    req = make_author_request('https://api.douban.com/shuo/v2/statuses/%s/comments?count=200' % status_id)
+    try:
+        json_reply = json.loads(urllib2.urlopen(req).read())
+        for reply in json_reply:
+            reply_time = datetime.strptime(reply['created_at'], TIMEFORMAT)
+            if re.search('@yuanfanglee', reply['text']) is not None and reply_time > variable.check_time:
+                variable.tmp_time = reply_time
+                if reply['user']['uid']:
+                    yuan_fang_say(status_id, reply['user']['uid'], reply['text'])
+    except:
+        print 'check reply failed'
 
 def check_notifications(comment_ids):
     for status_id in comment_ids:
@@ -114,7 +123,7 @@ def main():
     variable.check_time = variable.tmp_time = tmp_time
     f.close()
     while True:
-        author_req = make_author_requeset('https://api.douban.com/v2/notifications')
+        author_req = make_author_request('https://api.douban.com/v2/notifications')
         f = urllib2.urlopen(author_req)
         notifications = f.read()
         json_notification = json.loads(notifications)
